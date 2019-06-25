@@ -28,6 +28,12 @@ const char* mqtt_server = "192.168.1.20";
 // Topic to publish to
 const char* mqtt_publishTopic = "topic/to/publishTo";
 
+// Set retention
+const bool retainMessage = true;
+
+// Wait between publishing (ms)
+const int publishWait = 5000;
+
 // LED indicator when publishing
 bool LEDIndicator = false;
 
@@ -122,14 +128,14 @@ void loop()
   client.loop();
 
   long now = millis();
-  if (now - lastMsg > 10000) {
+  if (now - lastMsg > publishWait) {
+    lastMsg = now;
 
     // LED on if enabled in settings
     if(LEDIndicator){
       digitalWrite(BUILTIN_LED, LOW);
       }
 
-    lastMsg = now;
     sensors.setResolution(12);
     sensors.requestTemperatures();
     temp = sensors.getTempCByIndex(0);
@@ -140,7 +146,7 @@ void loop()
     
     if((temp > -20) && (temp <60))
       {
-      client.publish(mqtt_publishTopic, String(temp,1).c_str(),true);
+      client.publish(mqtt_publishTopic, String(temp,1).c_str(), retainMessage);
       }
 
     Serial.println("Done");
