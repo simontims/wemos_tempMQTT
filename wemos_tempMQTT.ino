@@ -8,12 +8,11 @@
 // https://github.com/milesburton/Arduino-Temperature-Control-Library
 // https://github.com/knolleary/pubsubclient
 
+
+// SETTINGS //
+
 // Data wire GPIO2 Pin D4 on Wemo D1 Mini
 #define ONE_WIRE_BUS 4
-
-// Setup a oneWire instance to communicate with OneWire devices 
-OneWire oneWire(ONE_WIRE_BUS);
-DallasTemperature sensors(&oneWire);
 
 // WIFI SSID and password
 const char* ssid = "mywifissid";
@@ -37,15 +36,22 @@ const int publishWait = 5000;
 // LED indicator when publishing
 bool LEDIndicator = false;
 
-// End of settings
+// END OF SETTINGS //
 
+
+// Setup a oneWire instance to communicate with OneWire devices 
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+
+// Setup PubSubClient
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+// Declare vars
 long lastMsg = 0;
 float temp = 0;
 
 void setup_wifi() {
-
   // Short wait before connecting to wifi
   delay(10);
 
@@ -101,7 +107,7 @@ void setup()
     
   // LED Off
   pinMode(BUILTIN_LED, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH); // LED Off  
+  digitalWrite(LED_BUILTIN, HIGH);
   
   sensors.begin();
 }
@@ -144,7 +150,7 @@ void loop()
 
     Serial.print("Publishing... ");   
     
-    if((temp > -20) && (temp <60))
+    if((temp > -20) && (temp < 60))
       {
       client.publish(mqtt_publishTopic, String(temp,1).c_str(), retainMessage);
       }
