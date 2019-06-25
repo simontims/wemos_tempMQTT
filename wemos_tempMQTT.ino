@@ -3,7 +3,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-// Inspirted by https://www.instructables.com/id/Remote-Temperature-Monitoring-Using-MQTT-and-ESP82/
+// Inspired by https://www.instructables.com/id/Remote-Temperature-Monitoring-Using-MQTT-and-ESP82/
 // https://github.com/PaulStoffregen/OneWire
 // https://github.com/milesburton/Arduino-Temperature-Control-Library
 // https://github.com/knolleary/pubsubclient
@@ -11,26 +11,27 @@
 // Data wire GPIO2 Pin D4 on Wemo D1 Mini
 #define ONE_WIRE_BUS 4
 
-// Setup a oneWire instance to communicate with any OneWire devices 
-// (not just Maxim/Dallas temperature ICs)
+// Setup a oneWire instance to communicate with OneWire devices 
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 // WIFI SSID and password
-const char* ssid = "BUBBLE2";
-const char* password = "lhouse00";
+const char* ssid = "mywifissid";
+const char* password = "secret";
 
 // This device hostname
-const char* thisHost = "WD1_2";
+const char* thisHost = "hostname";
 
 // Address of MQTT Broker
 const char* mqtt_server = "192.168.1.20";
 
 // Topic to publish to
-const char* mqtt_publishTopic = "bubble/masterbedroom/temperature";
+const char* mqtt_publishTopic = "topic/to/publishTo";
 
 // LED indicator when publishing
 bool LEDIndicator = false;
+
+// End of settings
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -38,8 +39,9 @@ long lastMsg = 0;
 float temp = 0;
 
 void setup_wifi() {
+
+  // Short wait before connecting to wifi
   delay(10);
-  // Connect to a WiFi network
 
   // Network options - set before Wifi.begin 
   WiFi.hostname(thisHost);  
@@ -88,16 +90,17 @@ void setup()
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
   
-  // client.subscribe("loungeac");
+  // To subscribe to any MQTT topics during setup, set them here
+  // client.subscribe("topic/to/subscribeto");
     
-  // LED
+  // LED Off
   pinMode(BUILTIN_LED, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH); // LED Off  
   
   sensors.begin();
-
 }
 
+// Callback if any messages arrived in subscribed topics
 void callback(char* topic, byte* payload, unsigned int length) {
  
   Serial.print("Message arrived in topic: ");
@@ -109,8 +112,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
  
   Serial.println();
-  Serial.println("-----------------------");
- 
 }
 
 void loop()
@@ -123,13 +124,14 @@ void loop()
   long now = millis();
   if (now - lastMsg > 10000) {
 
+    // LED on if enabled in settings
     if(LEDIndicator){
-      digitalWrite(BUILTIN_LED, LOW); // LED On
+      digitalWrite(BUILTIN_LED, LOW);
       }
 
     lastMsg = now;
     sensors.setResolution(12);
-    sensors.requestTemperatures(); // Send the command to get temperatures
+    sensors.requestTemperatures();
     temp = sensors.getTempCByIndex(0);
     Serial.print("Temp: ");
     Serial.println(temp);
@@ -142,7 +144,11 @@ void loop()
       }
 
     Serial.println("Done");
-    digitalWrite(BUILTIN_LED, HIGH); // LED Off
-    // client.subscribe("loungeac");
+
+    // Turn LED off at end of MQTT publish
+    digitalWrite(BUILTIN_LED, HIGH);
+
+    // To subscribe to any MQTT topics during main, set them here
+    // client.subscribe("topic/to/subscribeto");
   }
 }
